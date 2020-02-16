@@ -33,5 +33,31 @@ namespace WPFUI
             // DataContext is what the xaml file will refer to for the values
             DataContext = _gameSession;
         }
+
+        // Always need to have object sender and RoutedEventArgs but no need to use
+        private void OnClick_MoveNorth(object sender, RoutedEventArgs e)
+        {
+            _gameSession.MoveNorth();
+        }
+        private void OnClick_MoveWest(object sender, RoutedEventArgs e)
+        {
+            _gameSession.MoveWest();
+        }
+        private void OnClick_MoveEast(object sender, RoutedEventArgs e)
+        {
+            _gameSession.MoveEast();
+        }
+        private void OnClick_MoveSouth(object sender, RoutedEventArgs e)
+        {
+            _gameSession.MoveSouth();
+        }
+
+        /* Used Code
+         * private void ButtonBase_OnClick(object sender, RoutedEventArgs e)
+        {
+            _gameSession.CurrentPlayer.ExperiencePoints = _gameSession.CurrentPlayer.ExperiencePoints + 10;
+        }
+        */
+
     }
 }
