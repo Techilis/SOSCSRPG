@@ -9,10 +9,11 @@ using Engine.Models;
 namespace Engine.Factories
 {
     // By default, it is internal, typing it out makes no difference, just practice habit
-    
-    internal class WorldFactory
+    // Means its not an instance class, its like a factory producing standard outputs but all functions inside has to be static
+    // Cannot create instance anymore
+    internal static class WorldFactory
     {
-        internal World CreateWorld() 
+        internal static World CreateWorld() 
         {
             // Create World object and add locations before returning the World object
             World newWorld = new World();

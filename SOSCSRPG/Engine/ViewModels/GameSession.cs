@@ -9,7 +9,8 @@ using System.ComponentModel;
 
 namespace Engine.ViewModels
 {
-    public class GameSession : INotifyPropertyChanged
+    // BaseNotificationClass is the parent and GameSession is the child who inherits the function and event capabilities
+    public class GameSession : BaseNotificationClass
     {
         // Have current location raised as INotifyPropertyChanged, creating backing variable and raise whenever value changes
         private Location _currentLocation;
@@ -22,12 +23,12 @@ namespace Engine.ViewModels
             get { return _currentLocation; }
             set 
             { 
-                _currentLocation = value; 
-                OnPropertyChanged("CurrentLocation");
-                OnPropertyChanged("HasLocationToNorth");
-                OnPropertyChanged("HasLocationToWest");
-                OnPropertyChanged("HasLocationToEast");
-                OnPropertyChanged("HasLocationToSouth");
+                _currentLocation = value;
+                OnPropertyChanged(nameof(CurrentLocation));
+                OnPropertyChanged(nameof(HasLocationToNorth));
+                OnPropertyChanged(nameof(HasLocationToWest));
+                OnPropertyChanged(nameof(HasLocationToEast));
+                OnPropertyChanged(nameof(HasLocationToSouth));
             }
         }
 
@@ -54,19 +55,29 @@ namespace Engine.ViewModels
         public GameSession()
         {
             // This creates a new Player object and set to CurrentPlayer when GameSession is ran
-            CurrentPlayer = new Player();
-            // Need to set Player class and properties to public
-            CurrentPlayer.Name = "Gaston";
-            CurrentPlayer.CharacterClass = "Fighter";
-            CurrentPlayer.HitPoints = 10;
-            CurrentPlayer.Gold = 1000000;
-            CurrentPlayer.ExperiencePoints = 0;
-            CurrentPlayer.Level = 1;
+            CurrentPlayer = new Player
+            {
+                // Need to set Player class and properties to public
+                Name = "Gaston",
+                CharacterClass = "Fighter",
+                HitPoints = 10,
+                Gold = 1000000,
+                ExperiencePoints = 0,
+                Level = 1
+            };
 
-            // Instantiate a WorldFactory object and store in factory variable
-            WorldFactory factory = new WorldFactory();
-            // Call CreateWorld function to create World object to store in CurrentWorld variable
-            CurrentWorld = factory.CreateWorld();
+            // Player is an instance class but WorldFactory should be a static class (aka global)
+            CurrentWorld = WorldFactory.CreateWorld();
+
+
+            /* If WorldFactory is not static, have to type the following:
+             * 
+                // Instantiate a WorldFactory object and store in factory variable
+                WorldFactory factory = new WorldFactory();
+                // Call CreateWorld function to create World object to store in CurrentWorld variable
+                CurrentWorld = factory.CreateWorld();
+            */
+
             // Set current location
             CurrentLocation = CurrentWorld.LocationAt(0, -1);
 
@@ -75,26 +86,35 @@ namespace Engine.ViewModels
         // Set public because GameSession class is in Engine project but WPFUI Project needs to call it
         public void MoveNorth() 
         {
-            CurrentLocation = CurrentWorld.LocationAt(CurrentLocation.XCoordinate, CurrentLocation.YCoordinate + 1);
+            // Guard
+            if (HasLocationToNorth)
+            {
+                CurrentLocation = CurrentWorld.LocationAt(CurrentLocation.XCoordinate, CurrentLocation.YCoordinate + 1);
+            }
         }
         public void MoveWest()
         {
-            CurrentLocation = CurrentWorld.LocationAt(CurrentLocation.XCoordinate - 1, CurrentLocation.YCoordinate);
+            if (HasLocationToWest)
+            {
+                CurrentLocation = CurrentWorld.LocationAt(CurrentLocation.XCoordinate - 1, CurrentLocation.YCoordinate);
+            }
         }
         public void MoveEast()
         {
-            CurrentLocation = CurrentWorld.LocationAt(CurrentLocation.XCoordinate + 1, CurrentLocation.YCoordinate);
+            if (HasLocationToEast)
+            {
+                CurrentLocation = CurrentWorld.LocationAt(CurrentLocation.XCoordinate + 1, CurrentLocation.YCoordinate);
+            }
         }
         public void MoveSouth()
         {
-            CurrentLocation = CurrentWorld.LocationAt(CurrentLocation.XCoordinate, CurrentLocation.YCoordinate - 1);
+            if (HasLocationToSouth)
+            {
+                CurrentLocation = CurrentWorld.LocationAt(CurrentLocation.XCoordinate, CurrentLocation.YCoordinate - 1);
+            }
+            
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
 
-        protected virtual void OnPropertyChanged(string propertyName)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
     }
 }
