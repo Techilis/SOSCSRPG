@@ -14,7 +14,9 @@ namespace Engine.ViewModels
     {
         // Have current location raised as INotifyPropertyChanged, creating backing variable and raise whenever value changes
         private Location _currentLocation;
+        private Monster _currentMonster;
 
+        public World CurrentWorld { get; set; }
         // Property currentPlayer takes in a player class as an object
         public Player CurrentPlayer { get; set; }
 
@@ -29,10 +31,32 @@ namespace Engine.ViewModels
                 OnPropertyChanged(nameof(HasLocationToWest));
                 OnPropertyChanged(nameof(HasLocationToEast));
                 OnPropertyChanged(nameof(HasLocationToSouth));
+
+                GivePlayerQuestsAtLocation();
+                GetMonsterAtLocation();
             }
         }
 
-        public World CurrentWorld { get; set; }
+        private void GetMonsterAtLocation()
+        {
+            // From function at Location.cs
+            CurrentMonster = CurrentLocation.GetMonster();
+        }
+
+        public bool HasMonster => CurrentMonster != null;
+
+        public Monster CurrentMonster
+        {
+            get { return _currentMonster; }
+            set
+            {
+                _currentMonster = value;
+
+                // Notify UI if CurrentMonster or HasMonster property has changed
+                OnPropertyChanged(nameof(CurrentMonster));
+                OnPropertyChanged(nameof(HasMonster));
+            }
+        }
 
         // Check for possible locations to NSEW of current location
         public bool HasLocationToNorth
@@ -115,6 +139,16 @@ namespace Engine.ViewModels
             
         }
 
-
+        private void GivePlayerQuestsAtLocation()
+        {
+            foreach(Quest quest in CurrentLocation.QuestAvailableHere)
+            {
+                // Assign quest if CurrentPlayer does not have a quest matching the quest at location
+                if(!CurrentPlayer.Quests.Any(q => q.PlayerQuest.ID == quest.ID))
+                {
+                    CurrentPlayer.Quests.Add(new QuestStatus(quest));
+                }
+            }
+        }
     }
 }

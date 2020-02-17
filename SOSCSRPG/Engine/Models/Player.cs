@@ -74,10 +74,17 @@ namespace Engine.Models
 
         public ObservableCollection<GameItem> Inventory { get; set; }
 
+        // ToList() to materialize results in inventory, differed execution. Sometimes it differs execution until needed.
+        public List<GameItem> Weapons => Inventory.Where(i => i is Weapon).ToList();
+        public ObservableCollection<QuestStatus> Quests { get; set; }
+
         public Player()
         {
             Inventory = new ObservableCollection<GameItem>();
+            Quests = new ObservableCollection<QuestStatus>();
         }
+
+
 
     }
 }
