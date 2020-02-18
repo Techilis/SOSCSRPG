@@ -13,6 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Engine.ViewModels;
+using Engine.EventArgs;
 
 namespace WPFUI
 {
@@ -24,12 +25,13 @@ namespace WPFUI
         // Set as private variable to make it more strict as no other class will use properties from Engine.ViewModels from MainWindow
         // Set private inside class but not accessible out the function
         // _gameSession is the name of the variable, based on normal naming convention
-        private GameSession _gameSession;
+        private readonly GameSession _gameSession;
         public MainWindow()
         {
             InitializeComponent();
             // Instantiate new GameSession object and store it into a variable
             _gameSession = new GameSession();
+            _gameSession.OnMessageRaised += OnGameMessageRaised;
             // DataContext is what the xaml file will refer to for the values
             DataContext = _gameSession;
         }
@@ -50,6 +52,17 @@ namespace WPFUI
         private void OnClick_MoveSouth(object sender, RoutedEventArgs e)
         {
             _gameSession.MoveSouth();
+        }
+
+        private void OnClick_AttackMonster(object sender, RoutedEventArgs e)
+        {
+            _gameSession.AttackCurrentMonster();
+        }
+
+        private void OnGameMessageRaised(object sender, GameMessageEventArgs e)
+        {
+            GameMessages.Document.Blocks.Add(new Paragraph(new Run(e.Message)));
+            GameMessages.ScrollToEnd();
         }
 
         /* Used Code

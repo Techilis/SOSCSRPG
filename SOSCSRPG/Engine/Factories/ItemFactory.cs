@@ -12,7 +12,8 @@ namespace Engine.Factories
     // But first time can call to load up game items
     public static class ItemFactory
     {
-        private static List<GameItem> _standardGameItems;
+        // You can only set readonly item once
+        private static readonly List<GameItem> _standardGameItems;
 
         // This function is run the first time it is called (aka when game is first loaded)
         static ItemFactory() 
@@ -38,6 +39,10 @@ namespace Engine.Factories
 
             if (standardItem != null)
             {
+                if (standardItem is Weapon)
+                {
+                    return (standardItem as Weapon).Clone();
+                }
                 return standardItem.Clone();
             }
             return null;
