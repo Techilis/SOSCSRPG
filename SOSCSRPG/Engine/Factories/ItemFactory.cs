@@ -1,51 +1,93 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Xml;
+using Engine.Actions;
 using Engine.Models;
+using Engine.Shared;
 
 namespace Engine.Factories
 {
-    // Create list that holds all the items in the world, call factory for item when 'created' in the world
-    // Static class has no constructor because it never gets constructed
-    // But first time can call to load up game items
     public static class ItemFactory
     {
-        // You can only set readonly item once
-        private static readonly List<GameItem> _standardGameItems;
+        private const string GAME_DATA_FILENAME = ".\\GameData\\GameItems.xml";
 
-        // This function is run the first time it is called (aka when game is first loaded)
-        static ItemFactory() 
+        private static readonly List<GameItem> _standardGameItems = new List<GameItem>();
+
+        static ItemFactory()
         {
-            // Initialize new empty list, if not the _standardGameItems is null
-            _standardGameItems = new List<GameItem>();
-            _standardGameItems.Add(new Weapon(1001, "Pointy Stick", 1, 1, 2));
-            _standardGameItems.Add(new Weapon(1002, "Rusty Sword", 5, 1, 3));
-            _standardGameItems.Add(new GameItem(9001, "Snake fang", 1));
-            _standardGameItems.Add(new GameItem(9002, "Snakeskin", 2));
-            _standardGameItems.Add(new GameItem(9003, "Rat tail", 1));
-            _standardGameItems.Add(new GameItem(9004, "Rat fur", 2));
-            _standardGameItems.Add(new GameItem(9005, "Spider fang", 1));
-            _standardGameItems.Add(new GameItem(9006, "Spider silk", 2));
+            if(File.Exists(GAME_DATA_FILENAME))
+            {
+                XmlDocument data = new XmlDocument();
+                data.LoadXml(File.ReadAllText(GAME_DATA_FILENAME));
+
+                LoadItemsFromNodes(data.SelectNodes("/GameItems/Weapons/Weapon"));
+                LoadItemsFromNodes(data.SelectNodes("/GameItems/HealingItems/HealingItem"));
+                LoadItemsFromNodes(data.SelectNodes("/GameItems/MiscellaneousItems/MiscellaneousItem"));
+            }
+            else
+            {
+                throw new FileNotFoundException($"Missing data file: {GAME_DATA_FILENAME}");
+            }
         }
 
-        // Returns a GameItem object with the itemTypeID, use LINQ to query list to find the item
         public static GameItem CreateGameItem(int itemTypeID)
         {
-            // Use LINQ to find first item that has the ItemTypeID property matching itemTypeID
-            // If cannot find, will return the default value which is null
-            GameItem standardItem = _standardGameItems.FirstOrDefault(item => item.ItemTypeID == itemTypeID);
+            return _standardGameItems.FirstOrDefault(item => item.ItemTypeID == itemTypeID)?.Clone();
+        }
 
-            if (standardItem != null)
+        public static string ItemName(int itemTypeID)
+        {
+            return _standardGameItems.FirstOrDefault(i => i.ItemTypeID == itemTypeID)?.Name ?? "";
+        }
+
+        private static void LoadItemsFromNodes(XmlNodeList nodes)
+        {
+            if(nodes == null)
             {
-                if (standardItem is Weapon)
-                {
-                    return (standardItem as Weapon).Clone();
-                }
-                return standardItem.Clone();
+                return;
             }
-            return null;
+
+            foreach(XmlNode node in nodes)
+            {
+                GameItem.ItemCategory itemCategory = DetermineItemCategory(node.Name);
+                
+                GameItem gameItem =
+                    new GameItem(itemCategory,
+                                 node.AttributeAsInt("ID"),
+                                 node.AttributeAsString("Name"),
+                                 node.AttributeAsInt("Price"),
+                                 itemCategory == GameItem.ItemCategory.Weapon);
+
+                if(itemCategory == GameItem.ItemCategory.Weapon)
+                {
+                    gameItem.Action =
+                        new AttackWithWeapon(gameItem,
+                                             node.AttributeAsInt("MinimumDamage"),
+                                             node.AttributeAsInt("MaximumDamage"));
+                }
+                else if(itemCategory == GameItem.ItemCategory.Consumable)
+                {
+                    gameItem.Action =
+                        new Heal(gameItem,
+                                 node.AttributeAsInt("HitPointsToHeal"));
+                }
+
+                _standardGameItems.Add(gameItem);
+            }
+        }
+
+        private static GameItem.ItemCategory DetermineItemCategory(string itemType)
+        {
+            switch(itemType)
+            {
+                case "Weapon":
+                    return GameItem.ItemCategory.Weapon;
+                case "HealingItem":
+                    return GameItem.ItemCategory.Consumable;
+                default:
+                    return GameItem.ItemCategory.Miscellaneous;
+            }
         }
     }
 }
